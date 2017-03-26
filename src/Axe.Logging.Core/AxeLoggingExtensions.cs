@@ -15,5 +15,26 @@ namespace Axe.Logging.Core
             exception.Data[LogEntryAddToExceptionKey] = logEntry;
             return exception;
         }
+
+        public static LogEntry GetLogEntries(this Exception exception, int maxLevel = 10)
+        {
+            var defaultLogEntry = new LogEntry
+            {
+                Entry = exception.Message,
+                Data = new {Error = exception.ToString()},
+                Level = LoggingLevel.Error
+            };
+
+            if (exception != null)
+            {
+                LogEntry currentLogEntry = exception.Data[LogEntryAddToExceptionKey] as LogEntry;
+                if (currentLogEntry != null)
+                {
+                    defaultLogEntry = currentLogEntry;
+                }
+            }
+
+            return defaultLogEntry;
+        }
     }
 }
