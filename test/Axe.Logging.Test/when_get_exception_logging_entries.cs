@@ -11,7 +11,7 @@ namespace Axe.Logging.Test
         public void should_return_logging_entry_of_error_level_when_simple_exception_is_not_marked()
         {
             var exception = new Exception();
-            LogEntry logEntry = exception.GetLogEntries();
+            LogEntry logEntry = exception.GetLogEntries().SingleOrDefault();
             Assert.NotNull(logEntry);
             Assert.Equal(LoggingLevel.Error, logEntry.Level);
         }
@@ -34,7 +34,7 @@ namespace Axe.Logging.Test
 
             var exception = new Exception();
             exception.Mark(logEntry);
-            LogEntry getLogEntry = exception.GetLogEntries();
+            LogEntry getLogEntry = exception.GetLogEntries().SingleOrDefault();
             Assert.NotNull(getLogEntry);
             Assert.Equal(getLogEntry.Level, level);
         }

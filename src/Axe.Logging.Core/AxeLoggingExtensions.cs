@@ -16,7 +16,7 @@ namespace Axe.Logging.Core
             return exception;
         }
 
-        public static LogEntry GetLogEntries(this Exception exception, int maxLevel = 10)
+        public static List<LogEntry> GetLogEntries(this Exception exception, int maxLevel = 10)
         {
             var defaultLogEntry = new LogEntry
             {
@@ -25,16 +25,21 @@ namespace Axe.Logging.Core
                 Level = LoggingLevel.Error
             };
 
+            var allLogEntries = new List<LogEntry>();
             if (exception != null)
             {
                 LogEntry currentLogEntry = exception.Data[LogEntryAddToExceptionKey] as LogEntry;
                 if (currentLogEntry != null)
                 {
-                    defaultLogEntry = currentLogEntry;
+                    allLogEntries.Add(currentLogEntry);
+                }
+                else
+                {
+                    allLogEntries.Add(defaultLogEntry);
                 }
             }
 
-            return defaultLogEntry;
+            return allLogEntries;
         }
     }
 }
