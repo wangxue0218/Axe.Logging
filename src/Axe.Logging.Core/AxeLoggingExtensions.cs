@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Axe.Logging.Core
 {
@@ -26,17 +24,22 @@ namespace Axe.Logging.Core
             };
 
             var allLogEntries = new List<LogEntry>();
-            if (exception != null)
+            int currentLevel = maxLevel;
+            while (currentLevel >= 0 && exception != null)
             {
                 LogEntry currentLogEntry = exception.Data[LogEntryAddToExceptionKey] as LogEntry;
                 if (currentLogEntry != null)
                 {
                     allLogEntries.Add(currentLogEntry);
                 }
-                else
-                {
-                    allLogEntries.Add(defaultLogEntry);
-                }
+
+                currentLevel--;
+                exception = exception.InnerException;
+            }
+
+            if (!allLogEntries.Any())
+            {
+                allLogEntries.Add(defaultLogEntry);
             }
 
             return allLogEntries;

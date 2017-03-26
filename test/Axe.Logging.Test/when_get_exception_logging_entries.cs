@@ -15,6 +15,7 @@ namespace Axe.Logging.Test
             Assert.NotNull(logEntry);
             Assert.Equal(LoggingLevel.Error, logEntry.Level);
         }
+
         [Theory]
         [InlineData(LoggingLevel.Info)]
         [InlineData(LoggingLevel.Warn)]
@@ -37,6 +38,37 @@ namespace Axe.Logging.Test
             LogEntry getLogEntry = exception.GetLogEntries().SingleOrDefault();
             Assert.NotNull(getLogEntry);
             Assert.Equal(getLogEntry.Level, level);
+        }
+
+        [Fact]
+        public void should_return_logging_entry_of_error_level_for_nest_exceptions_of_list_when_inner_exception_not_marked()
+        {
+            Exception innerException = new Exception();
+            for (int i = 0; i < 5; i++)
+            {
+                innerException = new Exception($"nested exception {i}", innerException);
+            }
+            LogEntry logEntry = innerException.GetLogEntries().FirstOrDefault();
+            Assert.NotNull(logEntry);
+            Assert.Equal(LoggingLevel.Error, logEntry.Level);
+        }
+
+        [Theory]
+        [InlineData(LoggingLevel.Info)]
+        [InlineData(LoggingLevel.Warn)]
+        [InlineData(LoggingLevel.Error)]
+        [InlineData(LoggingLevel.Fatal)]
+        public void should_return_logging_entries_for_nest_exceptions_of_list_when_inner_exception_marked(LoggingLevel level)
+        {
+            Exception innerException = new Exception();
+            innerException.Mark(new LogEntry(level));
+            for (int i = 0; i < 5; i++)
+            {
+                innerException = new Exception($"nested exception {i}", innerException);
+            }
+            LogEntry logEntry = innerException.GetLogEntries().FirstOrDefault();
+            Assert.NotNull(logEntry);
+            Assert.Equal(level, logEntry.Level);
         }
     }
 }

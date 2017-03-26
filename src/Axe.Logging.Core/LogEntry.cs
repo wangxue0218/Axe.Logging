@@ -15,5 +15,14 @@ namespace Axe.Logging.Core
         public object User { get; set; }
         public object Data { get; set; }
         public LoggingLevel Level { get; set; }
+
+        public LogEntry(LoggingLevel level)
+        {
+            this.Level = level;
+        }
+
+        public LogEntry()
+        {
+        }
     }
 }
