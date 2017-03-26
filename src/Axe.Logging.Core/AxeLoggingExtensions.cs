@@ -25,24 +25,49 @@ namespace Axe.Logging.Core
 
             var allLogEntries = new List<LogEntry>();
             int currentLevel = maxLevel;
-            while (currentLevel >= 0 && exception != null)
-            {
-                LogEntry currentLogEntry = exception.Data[LogEntryAddToExceptionKey] as LogEntry;
-                if (currentLogEntry != null)
-                {
-                    allLogEntries.Add(currentLogEntry);
-                }
+            bool IsAllExceptionsMarked = GetInnerExceptionLogEntries(allLogEntries, exception, currentLevel);
 
-                currentLevel--;
-                exception = exception.InnerException;
-            }
-
-            if (!allLogEntries.Any())
+            if (!IsAllExceptionsMarked)
             {
                 allLogEntries.Add(defaultLogEntry);
             }
 
             return allLogEntries;
+        }
+
+        static bool GetInnerExceptionLogEntries(List<LogEntry> allLogEntries, Exception exception, int allLevel)
+        {
+            if (allLevel < 0) return false;
+            int currentLevel = allLevel;
+            Exception currentException = exception;
+            while (currentLevel >= 0 && currentException != null)
+            {
+                LogEntry currentLogEntry = currentException.Data[LogEntryAddToExceptionKey] as LogEntry;
+                if (currentLogEntry != null)
+                {
+                    allLogEntries.Add(currentLogEntry);
+                    return true;
+                }
+                currentLevel--;
+                AggregateException aggregateException = currentException as AggregateException;
+                currentException = currentException.InnerException;
+
+                if (aggregateException == null)
+                {
+                    continue;
+                }
+
+                bool allInnerExceptionMarked = true;
+                foreach (Exception ex in aggregateException.Flatten().InnerExceptions)
+                {
+                    bool aggregateExceptionMarked = GetInnerExceptionLogEntries(allLogEntries, ex, currentLevel);
+                    if (!aggregateExceptionMarked) allInnerExceptionMarked = false;
+                }
+
+                return allInnerExceptionMarked;
+            }
+
+            return false;
         }
     }
 }

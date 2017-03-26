@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Axe.Logging.Core;
 using Xunit;
@@ -69,6 +70,79 @@ namespace Axe.Logging.Test
             LogEntry logEntry = innerException.GetLogEntries().FirstOrDefault();
             Assert.NotNull(logEntry);
             Assert.Equal(level, logEntry.Level);
+        }
+
+        [Fact]
+        public void should_get_log_entries_when_aggregate_exceptions_marked()
+        {
+            Exception nestWarnException = new Exception();
+            nestWarnException.Mark(new LogEntry(LoggingLevel.Warn));
+            for (int i = 0; i < 4; i++)
+            {
+                nestWarnException = new Exception($"nested exception {i}", nestWarnException);
+            }
+
+            Exception nestInfoException = new Exception();
+            nestInfoException.Mark(new LogEntry(LoggingLevel.Info));
+            for (int i = 0; i < 3; i++)
+            {
+                nestInfoException = new Exception($"nested exception {i}", nestInfoException);
+            }
+
+            var aggregateException = new AggregateException("this is single aggragate exception", nestWarnException, nestInfoException);
+
+            List<LogEntry> logEntries = aggregateException.GetLogEntries();
+
+            Assert.Equal(2, logEntries.Count);
+            Assert.Equal(LoggingLevel.Warn, logEntries[0].Level);
+            Assert.Equal(LoggingLevel.Info, logEntries[1].Level);
+        }
+
+        [Fact]
+        public void should_get_log_entries_for_aggregate_exceptions_when_one_exception_is_marked_and_the_other_is_unknow()
+        {
+            Exception nestWarnException = new Exception();
+            nestWarnException.Mark(new LogEntry(LoggingLevel.Warn));
+            for (int i = 0; i < 4; i++)
+            {
+                nestWarnException = new Exception($"nested exception {i}", nestWarnException);
+            }
+            Exception unknowException = new Exception();
+            var aggregateException = new AggregateException("this is single aggragate exception", nestWarnException, unknowException);
+
+            List<LogEntry> logEntries = aggregateException.GetLogEntries();
+
+            Assert.Equal(2, logEntries.Count);
+            Assert.Equal(LoggingLevel.Warn, logEntries[0].Level);
+            Assert.Equal(LoggingLevel.Error, logEntries[1].Level);
+        }
+
+        [Fact]
+        public void should_get_log_entries_for_complex_aggregate_exceptions()
+        {
+            Exception nestWarnException = new Exception();
+            nestWarnException.Mark(new LogEntry(LoggingLevel.Warn));
+            for (int i = 0; i < 4; i++)
+            {
+                nestWarnException = new Exception($"nested exception {i}", nestWarnException);
+            }
+            Exception unknowException = new Exception();
+            var childAggregateException = new AggregateException("this is child aggragate exception", nestWarnException, unknowException);
+
+            Exception nestInfoException = new Exception();
+            nestInfoException.Mark(new LogEntry(LoggingLevel.Info));
+            for (int i = 0; i < 3; i++)
+            {
+                nestInfoException = new Exception($"nested exception {i}", nestInfoException);
+            }
+            var aggregateException = new AggregateException("this is root aggragate exception", childAggregateException, nestInfoException);
+
+            List<LogEntry> logEntries = aggregateException.GetLogEntries();
+
+            Assert.Equal(3, logEntries.Count);
+            Assert.Equal(LoggingLevel.Info, logEntries[0].Level);
+            Assert.Equal(LoggingLevel.Warn, logEntries[1].Level);
+            Assert.Equal(LoggingLevel.Error, logEntries[2].Level);
         }
     }
 }
