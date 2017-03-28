@@ -10,6 +10,9 @@ namespace Axe.Logging.Core
 
         public static T Mark<T>(this T exception, LogEntry logEntry) where T : Exception
         {
+            if(exception == null)
+                throw new ArgumentNullException(nameof(exception));
+
             exception.Data[LogEntryAddToExceptionKey] = logEntry;
             return exception;
         }
@@ -18,6 +21,7 @@ namespace Axe.Logging.Core
         {
             var defaultLogEntry = new LogEntry
             {
+                Time = DateTime.UtcNow,
                 Entry = exception.Message,
                 Data = new {Error = exception.ToString()},
                 Level = LoggingLevel.Error

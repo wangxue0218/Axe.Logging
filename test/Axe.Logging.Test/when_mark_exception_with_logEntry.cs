@@ -6,6 +6,22 @@ namespace Axe.Logging.Test
 {
     public class when_mark_exception_with_logEntry
     {
+        [Fact]
+        public void should_throw_exception_when_null_call_mark()
+        {
+            var logEntry = new LogEntry
+            {
+                Id = Guid.NewGuid(),
+                Time = DateTime.UtcNow,
+                Entry = "entry uri + httpMethod",
+                User = new { CurrentUser = "Lou + pwc001" },
+                Data = new { Parameters = "I do not care" },
+                Level = LoggingLevel.Info
+            };
+            var exception = (Exception)null;
+            Assert.Throws<ArgumentNullException>(() => exception.Mark(logEntry));
+        }
+
         [Theory]
         [InlineData(LoggingLevel.Info)]
         [InlineData(LoggingLevel.Warn)]
